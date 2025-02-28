@@ -32,5 +32,18 @@ personas que están loguedas con estrellas hasta un puntaje de 5 y mínimo de 1,
 # Imagenes del proyecto
 
 ![1](https://imgur.com/lRvIh6W.jpeg)
+![2](https://imgur.com/rao4B8b.jpeg)
+![3](https://imgur.com/QExlNbr.jpeg)
+![4](https://imgur.com/ooBOLzR.jpeg)
+![5](https://imgur.com/ooBOLzR.jpeg)
+![6](https://imgur.com/YtXkat5.jpeg)
+![7](https://imgur.com/lRvIh6W.jpeg)
+![8](https://imgur.com/lRvIh6W.jpeg)
+![9](https://imgur.com/lRvIh6W.jpeg)
+![10](https://imgur.com/lRvIh6W.jpeg)
+![11](https://imgur.com/lRvIh6W.jpeg)
+![12](https://imgur.com/lRvIh6W.jpeg)
+![13](https://imgur.com/lRvIh6W.jpeg)
+![14](https://imgur.com/lRvIh6W.jpeg)
 
 
