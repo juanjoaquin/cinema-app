@@ -39,12 +39,12 @@ personas que están loguedas con estrellas hasta un puntaje de 5 y mínimo de 1,
 ![6](https://imgur.com/sEaC8a0.jpeg)
 ![7](https://imgur.com/Xg7t0Gj.jpeg)
 ![8](https://imgur.com/Uf3mRos.jpeg)
-![9](https://imgur.com/QExlNbr.jpeg)
-![10](https://imgur.com/QExlNbr.jpeg)
-![11](https://imgur.com/QExlNbr.jpeg)
-![12](https://imgur.com/QExlNbr.jpeg)
-![13](https://imgur.com/QExlNbr.jpeg)
-![14](https://imgur.com/QExlNbr.jpeg)
+![9](https://imgur.com/khwqTo3.jpeg)
+![10](https://imgur.com/tha3vxk.jpeg)
+![11](https://imgur.com/cfYqziP.jpeg)
+![12](https://imgur.com/t4mx33g.jpeg)
+![13](https://imgur.com/nj4XoRY.jpeg)
+![14](https://imgur.com/CS11CW8.jpeg)
 
 
 
