@@ -22,20 +22,26 @@ class CommentsController extends Controller
         return response()->json($comments, 200);
     }
 
-    public function show(string $id)
+    public function showCommentsForMovie(string $title)
     {
-        $comment = Comment::with('user', 'movie')->find($id);
+        $movie = Movie::where('title', $title)->first();
     
-        if (!$comment) {
-            return response()->json(['message' => 'Comment not found'], 404);
+        if (!$movie) {
+            return response()->json(['message' => 'Movie not found'], 404);
+        }
+    
+        $comments = Comment::with('user')->where('movie_id', $movie->id)->get();
+    
+        if ($comments->isEmpty()) {
+            return response()->json(['message' => 'Comments not found'], 404);
         }
     
         return response()->json([
-            'comment' => $comment
+            'comments' => $comments
         ], 200);
     }
 
-    public function store(Request $request, $id)
+    public function store(Request $request, $title)
     {
         $validated = $request->validate([
             'rating' => 'required|integer|min:1|max:5',
@@ -48,7 +54,7 @@ class CommentsController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
     
-        $movie = Movie::find($id);
+        $movie = Movie::where('title', $title)->first();
     
         if (!$movie) {
             return response()->json([
@@ -58,12 +64,16 @@ class CommentsController extends Controller
     
         $comment = Comment::create([
             'user_id' => $user->id, 
-            'movie_id' => $id, 
+            'movie_id' => $movie->id, 
             'rating' => $validated['rating'],
             'comment' => $validated['comment'],
         ]);
     
-        return response()->json($comment, 201);
+        return response()->json([
+            'message' => 'Comment posted successfully',
+            'comment' => $comment,
+            'movie' => $movie, 
+        ], 201);
 
     }
 

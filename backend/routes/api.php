@@ -33,8 +33,12 @@ Route::get('users', [MoviesController::class, 'getUsers']); // Get all movies
 //Movies
 Route::post('movie/create-movie', [MoviesController::class, 'store']); // Create pelicula
 Route::get('movies', [MoviesController::class, 'index']); // Get all movies
+Route::get('movie/{title}', [MoviesController::class, 'show']); // Get movie x id
 Route::delete('movies/{id}', [MoviesController::class, 'destroy']); // Delete movie
 Route::put('movies/{id}', [MoviesController::class, 'updatePrice']); // Updatear price
+Route::put('movie/{id}', [MoviesController::class, 'updateTitle']); // Updatear price
+
+Route::put('movies/{id}', [MoviesController::class, 'updateImage']); // Updatear path_image
 
 
 //Rooms
@@ -47,7 +51,7 @@ Route::get('/seats', [SeatsController::class, 'index']); // Get all seats
 Route::post('/seats/create-seats', [SeatsController::class, 'store']); // Create seats
 
 //MovieSchedules
-Route::get('/movie-schedules', [SchedulesController::class, 'index']); // Get all seats
+Route::get('/movies-schedules', [SchedulesController::class, 'index']); // Get all seats
 Route::post('/movie-schedules/create-schedules', [SchedulesController::class, 'store']); // Create Movie Schedules
 
 //Tickets
@@ -57,15 +61,20 @@ Route::post('/payment', [TicketController::class, 'storePayment']); // Pagar 1 o
 Route::post('/refund/{ticket_id}', [TicketController::class, 'refund']); // Refundar
 
 // Comments on movie
-Route::post('/comments/movie/{id}', [CommentsController::class, 'store']); // Publkicar comentario
+Route::post('/comments/movie/{title}', [CommentsController::class, 'store']); // Publkicar comentario
 Route::get('comments', [CommentsController::class, 'index']); // Get all comments
-Route::get('/comments/{id}', [CommentsController::class, 'show']); // Comment x id
+Route::get('/comments/movie/{title}', [CommentsController::class, 'showCommentsForMovie']); // Comment x id
 Route::delete('/comments/{id}', [CommentsController::class, 'destroy']); // Borrar comentario x user
 
 //Upcoming movies
-Route::post('post/upcoming-releases', [UpcomingsController::class, 'store']); // Publkicar comentario
-Route::get('upcoming-releases', [UpcomingsController::class, 'index']); // Get all comments
-Route::get('/upcoming-releases/{id}', [UpcomingsController::class, 'show']); // Comment x id
+Route::post('post/upcoming-movies', [UpcomingsController::class, 'store']); // Back publicar upcoming movies
+Route::get('upcoming-movies', [UpcomingsController::class, 'index']); // Get all upcomings
+Route::get('/upcoming-movie/{id}', [UpcomingsController::class, 'show']); // Get by id 
+
+
+Route::get('/schedule/{schedule_id}/details', [MoviesController::class, 'getScheduleDetails']);
+Route::get('schedules/movie/{movie_id}', [SchedulesController::class, 'getScheduleByMovie']);
+
 
 
 

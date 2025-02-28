@@ -2,33 +2,51 @@ import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { Nav } from './components/Nav/Nav'
+import { HomeContainer } from './components/Home/HomeContainer'
+import { MovieDetail } from './components/Home/MovieDetail'
+import { SelectSeats } from './components/Seats/SelectSeats'
+import Payment from './components/Payment/Payment'
+import { Register } from './components/auth/Register'
+import { Login } from './components/auth/Login'
+import { ProtectedRoutes } from './components/guards/ProtectedRoutes'
+import { UpcomingMovies } from './components/UpcomingMovies/UpcomingMovies'
+import { UpcomingDetail } from './components/UpcomingMovies/UpcomingDetail'
+import { TicketHistory } from './components/TicketHistory/TicketHistory'
+import { Location } from './components/Location/Location'
 
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <BrowserRouter>
+      <Nav />
+      <Routes>
+
+      <Route path="/auth/register" element={<Register />} />
+      <Route path="/auth/login" element={<Login />} />
+
+
+      
+      <Route path="/" element={<HomeContainer />} />
+
+      <Route path="/movie/:title" element={<MovieDetail />} />
+      <Route path="/schedule/:schedule_id/details" element={<ProtectedRoutes> <SelectSeats /> </ProtectedRoutes>} />
+      <Route path="/payment" element={<ProtectedRoutes> <Payment /> </ProtectedRoutes>} />
+
+      <Route path="/movies/upcoming-movies" element={<UpcomingMovies />} />
+      <Route path="/upcoming-movie/:id" element={<UpcomingDetail />} />
+
+      <Route path="/tickets/my-tickets" element={<TicketHistory />} />
+
+      <Route path="/location" element={<Location />} />
+
+
+
+
+      
+      </Routes>
+    </BrowserRouter>
   )
 }
 

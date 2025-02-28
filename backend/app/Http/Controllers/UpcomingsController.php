@@ -31,9 +31,7 @@ class UpcomingsController extends Controller
             return response()->json(['message' => 'Upcoming movies not found'], 404);
         }
     
-        return response()->json([
-            'upcomings' => $upcomingById
-        ], 200);
+        return response()->json($upcomingById, 200);
     }
 
     public function store(Request $request)

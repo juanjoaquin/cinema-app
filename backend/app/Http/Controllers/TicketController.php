@@ -41,9 +41,12 @@ class TicketController extends Controller
             ], 404);
         }
 
+        $totalPrice = $tickets->sum('price');
+
         return response()->json([
             'message' => 'Filtered ticket history retrieved successfully',
             'historial' => $tickets,
+            'total_price' => $totalPrice,
         ], 200);
     }
 
@@ -51,15 +54,20 @@ class TicketController extends Controller
     {
         $validated = $request->validate([
             'schedule_id' => 'required|exists:movie_schedules,id',
-            'seat_id' => 'required|array', // Asegurarse que seat_id es un array
-            'seat_id.*' => 'exists:seats,id', // Cada asiento debe existir
-            'user_id' => 'required|exists:users,id', // Validar user_id si es necesario
+            'seat_id' => 'required|array',
+            'seat_id.*' => 'exists:seats,id',
+
         ]);
 
-        $tickets = []; // Para almacenar los tickets creados
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Usuario no autenticado'], 401);
+        }
+
+        $tickets = [];
 
         foreach ($validated['seat_id'] as $seatId) {
-            // Verificar si ya hay un ticket con ese asiento en el mismo horario
             $existingTicket = Ticket::where('schedule_id', $validated['schedule_id'])
                 ->where('seat_id', $seatId)
                 ->whereIn('status', ['pending', 'paid'])
@@ -69,20 +77,20 @@ class TicketController extends Controller
                 return response()->json(['error' => 'Uno de los asientos ya ha sido reservado'], 400);
             }
 
-            // Obtener el precio de la película
+
             $schedule = MovieSchedule::findOrFail($validated['schedule_id']);
             $movie = $schedule->movie;
 
-            // Crear el ticket para el asiento
+
             $ticket = Ticket::create([
-                'user_id' => $validated['user_id'],
+                'user_id' => $user->id,
                 'schedule_id' => $validated['schedule_id'],
                 'seat_id' => $seatId,
                 'price' => $movie->price,
                 'status' => 'pending',
+
             ]);
 
-            // Agregar ticket a la lista
             $tickets[] = $ticket;
         }
 
@@ -92,44 +100,9 @@ class TicketController extends Controller
         ], 201);
     }
 
-    // public function storeTicket(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'schedule_id' => 'required|exists:movie_schedules,id',
-    //         'seat_id' => 'required|exists:seats,id',
-    //         'user_id' => 'required|exists:users,id',
-    //     ]);
-
-    //     // Verificar si ya hay un ticket con ese asiento en el mismo horario
-    //     $existingTicket = Ticket::where('schedule_id', $validated['schedule_id'])
-    //         ->where('seat_id', $validated['seat_id'])
-    //         ->whereIn('status', ['pending', 'paid'])
-    //         ->first();
-
-    //     if ($existingTicket) {
-    //         return response()->json(['error' => 'Este asiento ya ha sido reservado'], 400);
-    //     }
-
-    //     // Obtener el precio de la película
-    //     $schedule = MovieSchedule::findOrFail($validated['schedule_id']);
-    //     $movie = $schedule->movie;
-
-    //     // Crear el ticket
-    //     $ticket = Ticket::create([
-    //         'user_id' => $validated['user_id'],
-    //         'schedule_id' => $validated['schedule_id'],
-    //         'seat_id' => $validated['seat_id'],
-    //         'price' => $movie->price,
-    //         'status' => 'pending',
-    //     ]);
-
-    //     return response()->json($ticket, 201);
-    // }
-
 
     public function storePayment(Request $request)
     {
-        // Validación de la solicitud
         $validated = $request->validate([
             'ticket_id' => 'required|array',
             'ticket_id.*' => 'exists:tickets,id',
@@ -139,78 +112,139 @@ class TicketController extends Controller
             'card_expiration' => 'required|string',
             'card_cvv' => 'required|string',
         ]);
-    
-        // Obtener todos los tickets seleccionados
+
         $tickets = Ticket::whereIn('id', $validated['ticket_id'])->get();
-    
-        // Verificar si algún ticket ya ha sido pagado
+
         foreach ($tickets as $ticket) {
             if ($ticket->status === 'paid') {
                 return response()->json(['error' => 'Uno o más tickets ya han sido pagados'], 400);
             }
         }
-    
-        // Calcular el monto total para el pago (sumar los precios de todos los tickets)
+
         $totalAmount = $tickets->sum('price');
-    
-        // Crear el pago con el monto total
+
         $payment = Payment::create([
-            'user_id' => $tickets->first()->user_id,  // Usamos el usuario del primer ticket (todos deberían tener el mismo)
-            'amount' => $totalAmount,  // Monto total por todos los tickets
+            'user_id' => $tickets->first()->user_id,
+            'amount' => $totalAmount,
             'payment_method' => $validated['payment_method'],
             'card_name' => $validated['card_name'],
             'card_number' => $validated['card_number'],
             'card_expiration' => $validated['card_expiration'],
             'card_cvv' => $validated['card_cvv'],
-            'status' => 'completed',  // El pago se marca como completado
+            'status' => 'completed',
         ]);
-    
-        // Asociar los tickets con el pago
+
         $payment->tickets()->attach($tickets);
-    
-        // Actualizar el estado de todos los tickets a "paid"
+
         foreach ($tickets as $ticket) {
             $ticket->update(['status' => 'paid']);
+
+            $seat = Seat::find($ticket->seat_id);
+            if ($seat) {
+                $seat->update(['status' => false]);
+            }
         }
-    
+
         return response()->json([
             'message' => 'Pago realizado con éxito para todos los tickets',
             'payment' => $payment,
         ], 201);
     }
-    
 
-
-    public function refund($ticket_id)
+    public function refund($ticket_id) //fixeado
     {
         $ticket = Ticket::findOrFail($ticket_id);
 
-        // Verificar que el ticket esté pagado antes de reembolsarlo
         if ($ticket->status !== 'paid') {
-            return response()->json(['error' => 'El ticket no puede ser reembolsado'], 400);
+            return response()->json(['error' => 'The ticket cannot be refunded.'], 400);
         }
 
-        // Buscar el pago relacionado con el ticket
-        $payment = Payment::where('ticket_id', $ticket->id)->first();
+        $purchaseTime = $ticket->created_at;
+        $now = now();
+        $timeDifference = $now->diffInMinutes($purchaseTime);
 
-        if (!$payment || $payment->status !== 'completed') {
-            return response()->json(['error' => 'No se encontró un pago válido para este ticket'], 400);
+        if ($timeDifference > 10) {
+            return response()->json(['error' => 'Refund is only available within 10 minutes of purchase.'], 400);
         }
 
-        // Cambiar estado del ticket a cancelado
+        $payment = $ticket->payments()->first();
+
         $ticket->update(['status' => 'canceled']);
 
-        // Liberar el asiento cambiando su estado a "available"
         $seat = Seat::find($ticket->seat_id);
         if ($seat) {
             $seat->update(['status' => true]);
         }
 
         return response()->json([
-            'message' => 'Reembolso realizado con éxito y asiento liberado',
+            'message' => 'Refund processed successfully and seat released.',
             'ticket' => $ticket,
             'payment' => $payment,
             'seat' => $seat
         ], 200);
     }
+
+    // Esta es la que uso!!
+    // public function refund($ticket_id)
+    // {
+    //     $ticket = Ticket::findOrFail($ticket_id);
+
+    //     // Verificar que el ticket esté pagado antes de reembolsarlo
+    //     if ($ticket->status !== 'paid') {
+    //         return response()->json(['error' => 'El ticket no puede ser reembolsado'], 400);
+    //     }
+
+    //     // Buscar el pago relacionado con el ticket
+    //     $payment = $ticket->payments()->first(); // Usar relación en lugar de consulta manual
+
+    //     // Cambiar estado del ticket a cancelado
+    //     $ticket->update(['status' => 'canceled']);
+
+    //     // Liberar el asiento cambiando su estado a "available"
+    //     $seat = Seat::find($ticket->seat_id);
+    //     if ($seat) {
+    //         $seat->update(['status' => true]);
+    //     }
+
+    //     return response()->json([
+    //         'message' => 'Reembolso realizado con éxito y asiento liberado',
+    //         'ticket' => $ticket,
+    //         'payment' => $payment, // Devuelve el pago asociado
+    //         'seat' => $seat
+    //     ], 200);
+    // }
+
+
+    // public function refund($ticket_id)
+    // {
+    //     $ticket = Ticket::findOrFail($ticket_id);
+
+    //     // Verificar que el ticket esté pagado antes de reembolsarlo
+    //     if ($ticket->status !== 'paid') {
+    //         return response()->json(['error' => 'El ticket no puede ser reembolsado'], 400);
+    //     }
+
+    //     // Buscar el pago relacionado con el ticket
+    //     $payment = Payment::where('ticket_id', $ticket->id)->first();
+
+    //     if (!$payment || $payment->status !== 'completed') {
+    //         return response()->json(['error' => 'No se encontró un pago válido para este ticket'], 400);
+    //     }
+
+    //     // Cambiar estado del ticket a cancelado
+    //     $ticket->update(['status' => 'canceled']);
+
+    //     // Liberar el asiento cambiando su estado a "available"
+    //     $seat = Seat::find($ticket->seat_id);
+    //     if ($seat) {
+    //         $seat->update(['status' => true]);
+    //     }
+
+    //     return response()->json([
+    //         'message' => 'Reembolso realizado con éxito y asiento liberado',
+    //         'ticket' => $ticket,
+    //         'payment' => $payment,
+    //         'seat' => $seat
+    //     ], 200);
+    // }
 }

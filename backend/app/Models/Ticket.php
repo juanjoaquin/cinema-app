@@ -33,6 +33,6 @@ class Ticket extends Model
 
     public function price()
     {
-        return $this->schedule->movie->price; // Obtiene el precio de la película asociada
+        return $this->schedule->movie->price; 
     }
 }

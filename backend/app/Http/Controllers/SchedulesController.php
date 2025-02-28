@@ -43,4 +43,17 @@ class SchedulesController extends Controller
 
         return response()->json($movieSchedule, 201);
     }
+
+    public function getScheduleByMovie($movie_id)
+    {
+        $schedules = MovieSchedule::with('movie')->where('movie_id', $movie_id)->get();
+
+        if(!$schedules) {
+            return response()->json([
+                'message' => 'Schedule dont have a relation with movie'
+            ], 404);
+        }
+
+        return response()->json($schedules, 200);
+    }
 }
